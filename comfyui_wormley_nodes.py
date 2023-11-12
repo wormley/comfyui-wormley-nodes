@@ -92,7 +92,7 @@ class CheckpointVAESelectorText:
     RETURN_TYPES = ("STRING","STRING")
     RETURN_NAMES = ("CHECKPOINT_NAME" , "VAE_NAME" )
     FUNCTION = "checkpoint_vae_selector"
-    CATEGORY = "Loaders"
+    CATEGORY = "utils"
     def checkpoint_vae_selector(self, ckpt_name,vae_name,appendvae):
         vae_out = ""
         if (vae_name is not None and vae_name != "None" and vae_name != "Baked VAE"):
@@ -102,11 +102,70 @@ class CheckpointVAESelectorText:
 
         return(ckpt_name,vae_name)
 
+class LoRA_Tag_To_Stack:
+    def __init__(self):
+        self.tag_pattern = "\<[0-9a-zA-Z\:\_\-\.\s\/\(\)]+\>"
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "text": ("STRING", {"multiline": True}),
+                              },
+                "optional": {"lora_stack": ("LORA_STACK",)
+                },
+}
+    RETURN_TYPES = ("LORA_STACK", "STRING")
+    RETURN_NAMES = ("LORA_STACK", "PROMPT")
+    FUNCTION = "load_lora_tags_stack"
+
+    CATEGORY = "utils"
+
+    def load_lora_tags_stack(self, text, lora_stack=None):
+        # print(f"\nLoraTagLoader input text: { text }")
+        lora_list=list()
+        if lora_stack is not None:
+            lora_list.extend([l for l in lora_stack if l[0] != "None"])
+
+
+        founds = re.findall(self.tag_pattern, text)
+        print(f"\nfoound lora tags: { founds }")
+
+        if len(founds) < 1:
+            return (lora_list,text)
+        
+        lora_files = folder_paths.get_filename_list("loras")
+        for f in founds:
+            tag = f[1:-1]
+            pak = tag.split(":")
+            (type,name,wModel) = pak[:3]
+            wClip = wModel
+            if len(pak)>3:
+                wClip = pak[3]
+            if type != 'lora':
+                continue
+            lora_name = None
+            for lora_file in lora_files:
+                if Path(lora_file).name.startswith(name) or lora_file.startswith(name):
+                    lora_name = lora_file
+                    break
+            if lora_name == None:
+                print(f"bypassed lora tag: { (type, name, wModel, wClip) } >> { lora_name }")
+                continue
+            print(f"detected lora tag: { (type, name, wModel, wClip) } >> { lora_name }")
+
+            lora_path = folder_paths.get_full_path("loras", lora_name)
+
+            strength_model = float(wModel)
+            strength_clip = float(wClip)
+            lora_list.extend([(lora_name, strength_model, strength_clip)]),
+
+        plain_prompt = re.sub(self.tag_pattern, "", text)
+        return (lora_list, plain_prompt)
 
 
 # Node List
 NODE_CLASS_MAPPINGS = {
     "CheckpointVAELoaderSimpleText": CheckpointVAELoaderSimpleText,
     "CheckpointVAESelectorText": CheckpointVAESelectorText,
+    "LoRA_Tag_To_Stack": LoRA_Tag_To_Stack,
 }
 

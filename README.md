@@ -14,3 +14,9 @@ I use these with a text switch to select between a list of random Checkpoints an
 
 The selector makes it easier to choose one than cut and paste the name.
 
+
+LoRA_Tag_To_Stack: Converts embedded lora tags in prompt to LORA_STACK for use with Comfyroll's stack.
+
+Stack code stolen from: https://github.com/RockOfFire/ComfyUI_Comfyroll_CustomNodes
+Tag code stolen from: https://github.com/badjeff/comfyui_lora_tag_loader
+
