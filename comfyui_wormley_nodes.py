@@ -7,6 +7,7 @@ import os
 import comfy.sd
 from nodes import *
 from folder_paths import *
+from pathlib import Path
 import random
 
 if __name__ == os.path.splitext(os.path.basename(__file__))[0] :
